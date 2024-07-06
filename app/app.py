@@ -198,18 +198,29 @@ class Journals(Resource):
         data = request.get_json()
         if not data:
             return {"error": "Missing data in request"}, 400
-       
+
+        # Data validation
+        required_fields = ['title', 'body', 'category']
+        if any(field not in data or not data[field] for field in required_fields):
+            return {"error": "Missing required fields"}, 400
+
         user_id = get_jwt_identity()
-    
-        journal = Journal(
-            title=data['title'],
-            body=data['body'],
-            category=data['category'],
-            user_id=user_id
-        )
-       
-        db.session.add(journal)
-        db.session.commit()
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+
+        try:
+            journal = Journal(
+                title=data['title'],
+                body=data['body'],
+                category=data['category'],
+                user_id=user_id
+            )
+
+            db.session.add(journal)
+            db.session.commit()
+        except Exception as e:
+            return {"error": "Internal server error"}, 500
+
         return make_response(journal.to_dict(), 201)
 
 api.add_resource(Journals, '/journals')
