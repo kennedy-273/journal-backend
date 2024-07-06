@@ -1,9 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.orm import validates, relationship
-from sqlalchemy.ext.associationproxy import association_proxy
 import re
 from datetime import datetime, timezone
+import cloudinary.uploader
 
 db = SQLAlchemy()
 
@@ -17,11 +17,22 @@ class User(db.Model, SerializerMixin):
     last_name = db.Column(db.String(), nullable=False)
     email = db.Column(db.String(), unique=True, nullable=False)
     password = db.Column(db.String(), nullable=False)
+    image = db.Column(db.String(), nullable=True)
 
     # relationships
     journals = relationship('Jounal', back_populates='user' ,cascade='all, delete-orphan')
 
     # validations
+    @validates('first_name')
+    def validate_first_name(self, key, first_name):
+        assert len(first_name) > 0, "First name should not be empty"
+        return first_name
+    
+    @validates('last_name')
+    def validate_last_name(self, key, last_name):
+        assert len(last_name) > 0, "Last name should not be empty"
+        return last_name
+
     @validates('email')
     def validate_email(self, key, email):
         assert '@' in email, 'Invalid email format'
@@ -30,12 +41,17 @@ class User(db.Model, SerializerMixin):
     
     @validates('password')
     def validate_password(self, key, password):
-        assert len(password) > 6, "Password should be at least 6 characters long"
+        assert len(password) >= 6, "Password should be at least 6 characters long"
         assert re.search(r"[A-Z]", password), "Password should contain at least one uppercase letter"
         assert re.search(r"[a-z]", password), "Password should contain at least one lowercase letter"
         assert re.search(r"[0-9]", password), "Password should contain at least one digit"
         assert re.search(r"[!@#$%^&*(),.?\":{}|<>]", password), "Password should contain at least one special character"
         return password
+    
+    # Uploading profile picture
+    def upload_image(self, image):
+        upload_result = cloudinary.uploader.upload(image)
+        self.image = upload_result['url']
 
 # Journal Model
 class Jounal(db.Model, SerializerMixin):
