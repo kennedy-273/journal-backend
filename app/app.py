@@ -11,7 +11,7 @@ import cloudinary
 import cloudinary.uploader
 # from cloudinary.utils import cloudinary_url
 
-from models import db, User, Jounal
+from models import db, User, Journal
 
 app = Flask(__name__)
 load_dotenv()
@@ -187,6 +187,85 @@ class UserByID(Resource):
    
 api.add_resource(UserByID, '/user/<int:id>')
 
-# Run the app
+# Journals (get post)
+class Journals(Resource):
+    @jwt_required()
+    def get(self):
+        journals = [journal.to_dict() for journal in Journal.query.all()]
+        return make_response(journals, 200)
+   
+    @jwt_required()
+    def post(self):
+        data = request.get_json()
+        if not data:
+            return {"error": "Missing data in request"}, 400
+       
+        journal = Journal(
+            title=data['title'],
+            body=data['body'],
+            category=data['category'],
+            
+            user_id=data['user_id']
+        )
+       
+        db.session.add(journal)
+        db.session.commit()
+        return make_response(journal.to_dict(), 201)
+
+api.add_resource(Journals, '/journals')
+
+
+# Journal By ID (get patch delete)
+class JournalByID(Resource):
+    @jwt_required()
+    def get(self, id):
+        journal = Journal.query.filter_by(id=id).first()
+        if journal is None:
+            return {"error": "Journal not found"}, 404
+        response_dict = journal.to_dict()
+        return make_response(response_dict, 200)
+   
+    @jwt_required()
+    def patch(self, id):
+        journal = Journal.query.filter_by(id=id).first()
+        if journal is None:
+            return {"error": "Journal not found"}, 404
+
+        data = request.get_json()
+        if not data:
+            return {"error": "Missing data in request"}, 400
+
+        if 'title' in data:
+            journal.title = data['title']
+        if 'body' in data:
+            journal.body = data['body']
+        if 'category' in data:
+            journal.category = data['category']
+        if 'created_at' in data:
+            journal.created_at = data['created_at']
+
+        try:
+            db.session.commit()
+            return make_response(journal.to_dict(), 200)
+        except AssertionError:
+            return {"errors": ["validation errors"]}, 400
+
+    @jwt_required()
+    def delete(self, id):             
+        journal = Journal.query.filter_by(id=id).first()
+        if journal is None:
+            return {"error": "Journal not found"}, 404
+        
+       
+        journal = Journal.query.get_or_404(id)
+        db.session.delete(journal)
+        db.session.commit()
+        return make_response({'message': 'Journal deleted successfully'})
+   
+api.add_resource(JournalByID, '/journal/<int:id>')
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, port=5500)
+

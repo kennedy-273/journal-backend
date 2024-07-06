@@ -20,7 +20,10 @@ class User(db.Model, SerializerMixin):
     image = db.Column(db.String(), nullable=True)
 
     # relationships
-    journals = relationship('Jounal', back_populates='user' ,cascade='all, delete-orphan')
+    journals = relationship('Journal', back_populates='user' ,cascade='all, delete-orphan')
+
+    # serialization rules
+    serialize_rules = ('-journals',)
 
     # validations
     @validates('first_name')
@@ -54,7 +57,7 @@ class User(db.Model, SerializerMixin):
         self.image = upload_result['url']
 
 # Journal Model
-class Jounal(db.Model, SerializerMixin):
+class Journal(db.Model, SerializerMixin):
     __tablename__ = 'journals'
 
     # columns
@@ -70,6 +73,9 @@ class Jounal(db.Model, SerializerMixin):
     # relationships
     user = relationship('User', back_populates='journals')
 
+    # serialization rules
+    serialize_rules = ('-user',)
+
     # validations
     @validates('title')
     def validate_title(self, key, title):
@@ -80,3 +86,7 @@ class Jounal(db.Model, SerializerMixin):
     def validate_body(self, key, body):
         assert len(body) > 0, "Body should not be empty"
         return body
+    @validates('category')
+    def validate_category(self, key, category):
+        assert len(category) > 0, "Category should not be empty"
+        return category
