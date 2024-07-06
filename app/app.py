@@ -9,14 +9,13 @@ from dotenv import load_dotenv
 import os
 import cloudinary
 import cloudinary.uploader
-# from cloudinary.utils import cloudinary_url
 
 from models import db, User, Journal
 
 app = Flask(__name__)
 load_dotenv()
-# app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URI')
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
@@ -263,8 +262,6 @@ class JournalByID(Resource):
         return make_response({'message': 'Journal deleted successfully'})
    
 api.add_resource(JournalByID, '/journal/<int:id>')
-
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5500)
