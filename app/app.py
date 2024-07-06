@@ -199,12 +199,13 @@ class Journals(Resource):
         if not data:
             return {"error": "Missing data in request"}, 400
        
+        user_id = get_jwt_identity()
+    
         journal = Journal(
             title=data['title'],
             body=data['body'],
             category=data['category'],
-            
-            user_id=data['user_id']
+            user_id=user_id
         )
        
         db.session.add(journal)
