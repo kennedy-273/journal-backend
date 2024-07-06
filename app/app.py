@@ -204,7 +204,7 @@ class Journals(Resource):
         if any(field not in data or not data[field] for field in required_fields):
             return {"error": "Missing required fields"}, 400
 
-        user_id = get_jwt_identity()
+        user_id = get_jwt_identity().get('id')
         if not user_id:
             return {"error": "Unauthorized"}, 401
 
@@ -224,7 +224,6 @@ class Journals(Resource):
         return make_response(journal.to_dict(), 201)
 
 api.add_resource(Journals, '/journals')
-
 
 # Journal By ID (get patch delete)
 class JournalByID(Resource):
