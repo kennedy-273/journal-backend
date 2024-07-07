@@ -190,7 +190,12 @@ api.add_resource(UserByID, '/user/<int:id>')
 class Journals(Resource):
     @jwt_required()
     def get(self):
-        journals = [journal.to_dict() for journal in Journal.query.all()]
+        user_id = get_jwt_identity().get('id')
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+
+        # Filter journals based on user_id
+        journals = [journal.to_dict() for journal in Journal.query.filter_by(user_id=user_id).all()]
         return make_response(journals, 200)
    
     @jwt_required()
@@ -271,6 +276,7 @@ class JournalByID(Resource):
         db.session.delete(journal)
         db.session.commit()
         return make_response({'message': 'Journal deleted successfully'})
+        
    
 api.add_resource(JournalByID, '/journal/<int:id>')
 
