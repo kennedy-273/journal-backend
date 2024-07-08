@@ -162,19 +162,27 @@ class UserByID(Resource):
         user = User.query.filter_by(id=user_id).first()
         if user is None:
             return {"error": "User not found"}, 404
-
-        if 'first_name' in request.form:
-            user.first_name = request.form['first_name']
-        if 'last_name' in request.form:
-            user.last_name = request.form['last_name']
-        if 'email' in request.form:
-            user.email = request.form['email']
-        if 'password' in request.form:
-            user.password = bcrypt.generate_password_hash(request.form['password']).decode('utf-8')
-        if 'image' in request.files:
-            image = request.files['image']
-            user.upload_image(image)
-
+    
+        # Check if the old password is provided and matches
+        if 'old_password' in request.form and 'new_password' in request.form:
+            old_password = request.form['old_password']
+            new_password = request.form['new_password']
+            if not bcrypt.check_password_hash(user.password, old_password):
+                return {"error": "Old password does not match"}, 401
+    
+            # Update to the new password
+            user.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        else:
+            if 'first_name' in request.form:
+                user.first_name = request.form['first_name']
+            if 'last_name' in request.form:
+                user.last_name = request.form['last_name']
+            if 'email' in request.form:
+                user.email = request.form['email']
+            if 'image' in request.files:
+                image = request.files['image']
+                user.upload_image(image)
+    
         try:
             db.session.commit()
             return make_response(user.to_dict(), 200)
