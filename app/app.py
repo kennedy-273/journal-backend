@@ -196,7 +196,7 @@ class UserByID(Resource):
         db.session.commit()
         return make_response({'message': 'User deleted successfully'})
    
-api.add_resource(UserByID, '/user/<int:id>')
+api.add_resource(UserByID, '/user')
 
 # Journals (get post)
 class Journals(Resource):
