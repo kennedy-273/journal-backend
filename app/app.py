@@ -143,7 +143,11 @@ api.add_resource(Users, '/users')
 class UserByID(Resource):
     @jwt_required()
     def get(self, id):
-        user = User.query.filter_by(id=id).first()
+        user_id = get_jwt_identity().get('id')
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+        
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return {"error": "User not found"}, 404
         response_dict = user.to_dict()
@@ -151,7 +155,11 @@ class UserByID(Resource):
    
     @jwt_required()
     def patch(self, id):
-        user = User.query.filter_by(id=id).first()
+        user_id = get_jwt_identity().get('id')
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+        
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return {"error": "User not found"}, 404
 
@@ -175,7 +183,11 @@ class UserByID(Resource):
 
     @jwt_required()
     def delete(self, id):             
-        user = User.query.filter_by(id=id).first()
+        user_id = get_jwt_identity().get('id')
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+        
+        user = User.query.filter_by(id=user_id).first()
         if user is None:
             return {"error": "User not found"}, 404
        
