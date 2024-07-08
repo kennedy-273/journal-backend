@@ -142,7 +142,7 @@ api.add_resource(Users, '/users')
 # User By ID (get patch delete)
 class UserByID(Resource):
     @jwt_required()
-    def get(self, id):
+    def get(self):
         user_id = get_jwt_identity().get('id')
         if not user_id:
             return {"error": "Unauthorized"}, 401
@@ -154,7 +154,7 @@ class UserByID(Resource):
         return make_response(response_dict, 200)
    
     @jwt_required()
-    def patch(self, id):
+    def patch(self):
         user_id = get_jwt_identity().get('id')
         if not user_id:
             return {"error": "Unauthorized"}, 401
@@ -182,7 +182,7 @@ class UserByID(Resource):
             return {"errors": ["validation errors"]}, 400
 
     @jwt_required()
-    def delete(self, id):             
+    def delete(self):             
         user_id = get_jwt_identity().get('id')
         if not user_id:
             return {"error": "Unauthorized"}, 401
@@ -190,8 +190,7 @@ class UserByID(Resource):
         user = User.query.filter_by(id=user_id).first()
         if user is None:
             return {"error": "User not found"}, 404
-       
-        user = User.query.get_or_404(id)
+    
         db.session.delete(user)
         db.session.commit()
         return make_response({'message': 'User deleted successfully'})
