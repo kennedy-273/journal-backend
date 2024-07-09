@@ -4,7 +4,8 @@ from flask_restful import Api, Resource
 from flask_jwt_extended import JWTManager, jwt_required, get_jwt_identity, create_access_token, create_refresh_token
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 import os
 import cloudinary
@@ -295,9 +296,38 @@ class JournalByID(Resource):
         db.session.delete(journal)
         db.session.commit()
         return make_response({'message': 'Journal deleted successfully'})
-        
-   
+         
 api.add_resource(JournalByID, '/journal/<int:id>')
+
+# Journals By Date
+class JournalsByDate(Resource):
+    @jwt_required()
+    def get(self, time_frame):
+        user_id = get_jwt_identity().get('id')
+        if not user_id:
+            return make_response({"error": "Unauthorized"}, 401)
+
+        now = datetime.now(timezone.utc)
+        if time_frame == 'all':
+            journals = Journal.query.filter_by(user_id=user_id).all()
+        else:
+            start_of_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            if time_frame == 'daily':
+                start_date = start_of_today
+            elif time_frame == 'weekly':
+                start_date = start_of_today - timedelta(days=now.weekday())
+            elif time_frame == 'monthly':
+                start_date = start_of_today.replace(day=1)
+            else:
+                return make_response({"error": "Invalid time frame"}, 400)
+
+            journals = Journal.query.filter(Journal.user_id == user_id, Journal.created_at >= start_date, Journal.created_at <= now).all()
+
+        journals_dict = [journal.to_dict() for journal in journals]
+
+        return make_response({"journals": journals_dict}, 200)
+
+api.add_resource(JournalsByDate, '/journals/<string:time_frame>')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5500)
