@@ -330,5 +330,4 @@ class JournalsByDate(Resource):
 api.add_resource(JournalsByDate, '/journals/<string:time_frame>')
 
 if __name__ == '__main__':
-    app.run(debug=False)
-
+    app.run(debug=True, port=5500)
